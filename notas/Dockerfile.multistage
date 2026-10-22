@@ -1,0 +1,33 @@
+# syntax=docker/dockerfile:1
+
+# Etapa 1: instalar las dependencias Python en un árbol aislado.
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+
+COPY requirements.txt ./
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+
+# Etapa 2: imagen final, solo con el intérprete, las dependencias y la app.
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+
+# Copiar únicamente el resultado de la instalación, no las herramientas de build.
+COPY --from=builder /install /usr/local
+
+RUN groupadd --gid 10001 appuser \
+    && useradd --uid 10001 --gid appuser --create-home --shell /usr/sbin/nologin appuser
+
+COPY --chown=appuser:appuser app.py ./
+COPY --chown=appuser:appuser templates ./templates
+
+USER 10001:10001
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \
+  CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/salud', timeout=2)"]
+
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "30", "--access-logfile", "-", "--error-logfile", "-", "app:app"]

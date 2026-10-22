@@ -1,0 +1,32 @@
+# Control de versiones
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Variables de entorno y secretos
+.env
+.env.*
+*.pem
+*.key
+
+# Material de auditoría que no debe entrar en la imagen
+sin-revisar/
+
+# Documentación y archivos de Compose
+*.md
+*.swp
+compose.yaml
+compose.yml
+docker-compose.yaml
+docker-compose.yml
